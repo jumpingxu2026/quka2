@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUKA游戏计分牌</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background-color: #444;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .config-panel {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #ccc;
+        }
+        
+        input[type="number"], input[type="text"] {
+            padding: 12px 15px;
+            border: 2px solid #666;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background-color: #555;
+            color: #fff;
+        }
+        
+        input[type="number"]:focus, input[type="text"]:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        button {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(155, 89, 182, 0.4);
+        }
+        
+        .players-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .players-table th,
+        .players-table td {
+            border: 1px solid #555;
+            padding: 8px 5px;
+            text-align: center;
+            color: white;
+            min-width: 50px;
+        }
+
+        .players-table th {
+            background: #9b59b6;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .players-table th:first-child,
+        .players-table td:first-child {
+            background-color: #333;
+            font-weight: 600;
+            min-width: 45px;
+            font-size: 11px;
+        }
+
+        .players-table th:last-child,
+        .players-table td:last-child {
+            border-right: none;
+        }
+
+        .players-table tr:nth-child(even) td:not(:first-child) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .players-table .name-input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 11px;
+            width: 100%;
+            padding: 5px 2px;
+            text-align: center;
+        }
+
+        .players-table .name-input:focus {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .players-table .score-input {
+            width: 100%;
+            padding: 6px 2px;
+            border: none;
+            border-radius: 3px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .players-table .score-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .players-table .score-input:focus {
+            background-color: rgba(255, 255, 255, 0.25);
+            outline: none;
+        }
+
+        .players-container {
+            background-color: #444;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .table-wrapper {
+            overflow-y: auto;
+            max-height: 60vh;
+            margin: 0 -5px;
+            padding: 0 5px;
+        }
+        
+        .summary-section {
+            margin-top: 40px;
+            padding: 25px;
+            background: #444;
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .ranking-list {
+            text-align: left;
+            margin-top: 10px;
+        }
+        
+        .ranking-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+        
+        .ranking-position {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #ffd700;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .delete-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .reset-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .winner {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        @media (max-width: 768px) {
+            .table-wrapper {
+                max-height: 55vh;
+            }
+
+            .players-table th,
+            .players-table td {
+                padding: 6px 3px;
+                min-width: 40px;
+                font-size: 11px;
+            }
+
+            .players-table th:first-child,
+            .players-table td:first-child {
+                min-width: 40px;
+                font-size: 10px;
+            }
+
+            .players-table th:last-child,
+            .players-table td:last-child {
+                border-right: none;
+            }
+
+            .players-table .name-input {
+                font-size: 10px;
+            }
+
+            .players-table .score-input {
+                padding: 5px 2px;
+                font-size: 11px;
+            }
+
+            .config-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .config-item {
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .summary-section {
+                margin-top: 20px;
+                padding: 15px;
+            }
+
+            .players-container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QUKA游戏计分牌</h1>
+            <div class="config-panel">
+                <div class="config-item">
+                    <label for="playerCount">玩家数量 (2-10人):</label>
+                    <input type="number" id="playerCount" min="2" max="10" value="4">
+                </div>
+                <div class="config-item">
+                    <label for="roundCount">游戏轮数:</label>
+                    <input type="number" id="roundCount" min="1" max="50" value="8">
+                </div>
+                <button onclick="setupGame()">开始游戏</button>
+            </div>
+        </div>
+        
+        <div class="players-container">
+            <div class="table-wrapper">
+                <table id="playersTable" class="players-table"></table>
+            </div>
+
+            <div style="text-align: center; margin: 15px 0;">
+                <button onclick="addRound()">增加轮数</button>
+            </div>
+            
+            <div class="summary-section">
+                <h3 style="text-align: center; margin-bottom: 20px;">全部人数得分排行榜</h3>
+                <div id="rankingList" class="ranking-list"></div>
+            </div>
+            
+            
+        </div>
+    </div>
+
+    <script>
+        let gameData = {
+            players: [],
+            currentRound: 1,
+            totalRounds: 8,
+            currentPlayerIndex: 0
+        };
+
+        const STORAGE_KEY = 'quka_score_data';
+
+        // 保存数据到本地存储
+        function saveGameData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+        }
+
+        // 从本地存储加载数据
+        function loadGameData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.players && data.players.length > 0) {
+                        gameData = data;
+                        return true;
+                    }
+                } catch (e) {
+                    console.log('加载数据失败');
+                }
+            }
+            return false;
+        }
+
+        // 清除保存的数据
+        function clearGameData() {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+
+        function generateDefaultNames(count) {
+            return Array(count).fill(0).map((_, i) => `玩家${i + 1}`);
+        }
+        
+        function setupGame() {
+            if (!confirm('确定要开始游戏吗？这将清除之前的数据。')) {
+                return;
+            }
+
+            const playerCount = parseInt(document.getElementById('playerCount').value) || 4;
+            const roundCount = parseInt(document.getElementById('roundCount').value) || 8;
+
+            if (playerCount < 2 || playerCount > 10) {
+                alert('玩家数量必须在2-10人之间');
+                return;
+            }
+
+            if (roundCount < 1 || roundCount > 50) {
+                alert('游戏轮数必须在1-50之间');
+                return;
+            }
+
+            gameData = {
+                players: [],
+                currentRound: 1,
+                totalRounds: roundCount,
+                currentPlayerIndex: 0
+            };
+
+            const defaultNames = generateDefaultNames(playerCount);
+
+            for (let i = 0; i < playerCount; i++) {
+                gameData.players.push({
+                    id: i + 1,
+                    name: defaultNames[i],
+                    scores: Array(roundCount).fill(0),
+                    total: 0
+                });
+            }
+
+            saveGameData();
+            updateUI();
+        }
+        
+        function updateUI() {
+            updatePlayersGrid();
+            updateSummary();
+        }
+        
+        function updatePlayersGrid() {
+            const playersTable = document.getElementById('playersTable');
+            
+            // 生成表头 - 第一列是轮次标签，后面每列是一个玩家
+            let headerHTML = '<thead><tr><th>轮次</th>';
+            gameData.players.forEach((player, playerIndex) => {
+                headerHTML += `<th>
+                    <input 
+                        type="text" 
+                        class="name-input" 
+                        value="${player.name}"
+                        data-player-index="${playerIndex}"
+                        onblur="updatePlayerName(${playerIndex}, this.value)"
+                    >
+                </th>`;
+            });
+            headerHTML += '</tr></thead>';
+            
+            // 生成表格内容 - 每行是一轮，每列是某玩家的分数
+            let bodyHTML = '<tbody>';
+            for (let roundIndex = 0; roundIndex < gameData.totalRounds; roundIndex++) {
+                const roundLabel = gameData.roundNames && gameData.roundNames[roundIndex] || `第${roundIndex + 1}轮`;
+                bodyHTML += `<tr><td>
+                    <input 
+                        type="text" 
+                        class="round-input" 
+                        value="${roundLabel}"
+                        data-round-index="${roundIndex}"
+                        onchange="updateRoundName(${roundIndex}, this.value)"
+                        onkeyup="updateFollowingRounds(${roundIndex}, this)"
+                    >
+                </td>`;
+                
+                gameData.players.forEach((player, playerIndex) => {
+                    bodyHTML += `<td>
+                        <input 
+                            type="number" 
+                            class="score-input" 
+                            placeholder="-"
+                            value="${player.scores[roundIndex] || ''}"
+                            data-player-index="${playerIndex}"
+                            data-round-index="${roundIndex}"
+                            onchange="updateScore(${playerIndex}, ${roundIndex}, this.value)"
+                        >
+                    </td>`;
+                });
+                
+                bodyHTML += '</tr>';
+            }
+            
+            bodyHTML += '</tbody>';
+            
+            playersTable.innerHTML = headerHTML + bodyHTML;
+        }
+
+        // 更新轮次名称
+        function updateRoundName(roundIndex, newName) {
+            if (!gameData.roundNames) {
+                gameData.roundNames = [];
+            }
+            if (!gameData.roundNames[roundIndex] && newName.trim() === '') {
+                return;
+            }
+            gameData.roundNames[roundIndex] = newName.trim() || `第${roundIndex + 1}轮`;
+            saveGameData();
+        }
+
+        // 编辑时实时更新后续轮次序号
+        function updateFollowingRounds(roundIndex, inputElement) {
+            const baseText = inputElement.value;
+            const baseMatch = baseText.match(/^(.*?)(\d+)$/);
+            if (!baseMatch) return;
+
+            const prefix = baseMatch[1];
+            const baseNum = parseInt(baseMatch[2]);
+            
+            // 更新后续所有轮次的序号
+            for (let i = roundIndex + 1; i < gameData.totalRounds; i++) {
+                const table = document.getElementById('playersTable');
+                const rows = table.querySelectorAll('tbody tr');
+                if (rows[i]) {
+                    const roundInput = rows[i].querySelector('.round-input');
+                    if (roundInput) {
+                        const currentVal = roundInput.value;
+                        const match = currentVal.match(/^(.*?)(\d+)$/);
+                        if (match) {
+                            const offset = i - roundIndex;
+                            roundInput.value = prefix + (baseNum + offset);
+                        }
+                    }
+                }
+            }
+        }
+
+        function updatePlayerName(playerIndex, newName) {
+            if (newName && newName.trim() !== '') {
+                gameData.players[playerIndex].name = newName.trim();
+                saveGameData();
+                updateSummary();
+            }
+        }
+
+        function updateScore(playerIndex, roundIndex, value) {
+            const score = parseInt(value) || 0;
+            gameData.players[playerIndex].scores[roundIndex] = score;
+
+            // 重新计算总分
+            recalculateTotal(playerIndex);
+
+            // 自动保存
+            saveGameData();
+
+            // 如果当前玩家已完成本轮计分，自动进入下一玩家
+            setTimeout(() => {
+                if (playerIndex === gameData.currentPlayerIndex) {
+                    nextPlayer();
+                }
+            }, 100);
+
+            updateSummary();
+        }
+        
+        function recalculateTotal(playerIndex) {
+            const player = gameData.players[playerIndex];
+            player.total = player.scores.reduce((sum, score) => sum + (score || 0), 0);
+        }
+        
+        function nextPlayer() {
+            gameData.currentPlayerIndex = (gameData.currentPlayerIndex + 1) % gameData.players.length;
+            saveGameData();
+
+            // 如果已经轮完所有玩家，进入下一轮
+            if (gameData.currentPlayerIndex === 0) {
+                nextRound();
+            } else {
+                updateUI();
+            }
+        }
+
+        function nextRound() {
+            if (gameData.currentRound < gameData.totalRounds) {
+                gameData.currentRound++;
+                gameData.currentPlayerIndex = 0;
+                saveGameData();
+                updateUI();
+            } else {
+                alert('所有轮次已完成！');
+            }
+        }
+        
+        function updateSummary() {
+            const rankingList = document.getElementById('rankingList');
+            const players = [...gameData.players].sort((a, b) => b.total - a.total);
+            
+            // 更新排行榜
+            rankingList.innerHTML = players.map((player, index) => `
+                <div class="ranking-item">
+                    <span><span class="ranking-position">第${index + 1}名</span> ${player.name}</span>
+                    <span>${player.total}分</span>
+                </div>
+            `).join('');
+        }
+        
+        function updateCurrentRoundIndicator() {
+            // 保留此函数以确保代码兼容性
+        }
+        
+        function addRound() {
+            if (gameData.totalRounds >= 50) {
+                alert('游戏轮数已达到上限50轮');
+                return;
+            }
+            gameData.totalRounds++;
+            gameData.players.forEach(player => {
+                player.scores.push(0);
+            });
+            saveGameData();
+            updateUI();
+        }
+
+        function resetScores() {
+            if (confirm('确定要重置所有分数吗？')) {
+                gameData.players.forEach(player => {
+                    player.scores = Array(gameData.totalRounds).fill(0);
+                    player.total = 0;
+                });
+                gameData.currentRound = 1;
+                gameData.currentPlayerIndex = 0;
+                saveGameData();
+                updateUI();
+            }
+        }
+        
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', () => {
+            // 尝试加载已保存的数据
+            if (!loadGameData()) {
+                // 没有保存数据，创建默认游戏
+                const playerCount = parseInt(document.getElementById('playerCount').value) || 4;
+                const roundCount = parseInt(document.getElementById('roundCount').value) || 8;
+
+                gameData = {
+                    players: [],
+                    currentRound: 1,
+                    totalRounds: roundCount,
+                    currentPlayerIndex: 0
+                };
+
+                const defaultNames = generateDefaultNames(playerCount);
+                for (let i = 0; i < playerCount; i++) {
+                    gameData.players.push({
+                        id: i + 1,
+                        name: defaultNames[i],
+                        scores: Array(roundCount).fill(0),
+                        total: 0
+                    });
+                }
+                saveGameData();
+            }
+            updateUI();
+
+            // 为数字输入框添加键盘支持
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const activeElement = document.activeElement;
+                    if (activeElement.classList.contains('score-input')) {
+                        nextPlayer();
+                    }
+                }
+            });
+        });
+        
+        // 添加分数快速输入功能
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('score-input')) {
+                e.target.select();
+            }
+        });
+    </script>
+</body>
+</html>
